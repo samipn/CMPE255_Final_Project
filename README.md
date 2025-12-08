@@ -34,6 +34,12 @@
 
 ---
 
+## Slideshow
+
+Here is a link to the slides: [Slideshow](https://github.com/samipn/CMPE255_Final_Project/blob/main/Psychometric-Feature-Extraction-for-Mental-Health-Conversations.pdf)
+
+---
+
 ## 1. Project Overview
 
 This project builds an end-to-end AI system that analyzes mental-health-related text and extracts interpretable psychosocial signals. These signals are **strictly non-diagnostic** and are intended to support therapists by highlighting contextual cues in message-based telehealth environments.
@@ -576,6 +582,7 @@ CMPE255_Final_Project/
 ├── README.md                 # This file
 ├── requirements.txt          # Python dependencies
 ├── Dockerfile               # Container definition
+├── Psychometric-Feature-Extraction-for-Mental-Health-Conversations.pdf # Slideshow
 │
 ├── notebooks/
 │   └── Mental_Health_Psychometrics_Training.ipynb  # Colab notebook
