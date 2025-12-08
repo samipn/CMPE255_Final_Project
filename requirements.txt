@@ -1,0 +1,36 @@
+# CMPE 255 Final Project - Psychometric Feature Extraction
+# Mental Health Multi-Task Model Dependencies
+
+# Core ML
+torch>=2.0.0
+transformers>=4.36.0
+datasets>=2.16.0
+accelerate>=0.25.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+
+# Visualization & Analysis
+matplotlib>=3.7.0
+seaborn>=0.12.0
+umap-learn>=0.5.4
+
+# Inference server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
+# Gradio demo
+gradio>=4.0.0
+
+# GCS support (for cloud deployment)
+google-cloud-storage>=2.10.0
+
+# Progress bars
+tqdm>=4.66.0
+
+# Jupyter notebooks
+jupyter>=1.0.0
+ipywidgets>=8.0.0

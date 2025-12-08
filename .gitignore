@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model weights (too large for git)
+trained_model/
+*.pt
+*.pth
+*.bin
+*.onnx
+*.safetensors
+
+# Data files
+*.csv
+*.parquet
+*.json
+!package.json
+data/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Cache
+.cache/
+*.cache
+huggingface/
+
+# Outputs
+outputs/
+results/
+metrics_summary.json
+reddit_mental_health_profiles_clean_labeled.csv
