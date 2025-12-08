@@ -337,7 +337,6 @@ Using K-Means on psychometric features:
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/samipn/CMPE255_Final_Project/blob/main/notebooks/Mental_Health_Psychometrics_Training.ipynb)
 
 - Notebook: `notebooks/Mental_Health_Psychometrics_Training.ipynb` is the canonical, self-contained Colab run. It installs deps, loads `phoenix1803/Mental-Health-LongParas`, trains the heads-only XLM-RoBERTa model with LR decay/pos_weight, and logs per-head losses plus metrics JSON.
-- Visuals: The notebook generates training curves, per-head losses, confusion matrix/ROC for family history, clustering plots, and a metrics summary. When you run it in Colab, download these outputs from `/content/exported_model` (or Drive) and keep them separate from the Vertex visuals. If you want to check them into the repo, place them under `images/colab/`.
 - How to run: Use a Colab GPU runtime (T4/A100), run all cells, and export artifacts to `/content/exported_model` (or Drive) for local FastAPI/Gradio use. The notebook includes quick single/batch inference examples matching the FastAPI response schema.
 - Gradio note: The interactive Gradio UI lives in `app/gradio_demo.py` (not embedded in the notebook). To demo in Colab, `pip install gradio` and run `python app/gradio_demo.py` after cloning; it will launch a shareable link with the simulated pipeline visuals and examples.
 
