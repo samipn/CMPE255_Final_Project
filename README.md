@@ -12,31 +12,37 @@
 
 ## Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [Key Features](#key-features)
-3. [Architecture](#architecture)
-4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Model Training](#model-training)
-7. [Dataset](#dataset)
-8. [Results](#results)
-9. [Deployment](#deployment)
-10. [MLOps Pipeline (Extra Credit)](#mlops-pipeline-extra-credit)
-11. [Project Structure](#project-structure)
-12. [Technical Details](#technical-details)
-13. [Ethical Considerations](#ethical-considerations)
+1. [1. Project Overview](#1-project-overview)
+2. [2. Key Features](#2-key-features)
+3. [3. Architecture](#3-architecture)
+4. [4. Methodology (CRISP-DM)](#4-methodology-crisp-dm)
+5. [5. Installation](#5-installation)
+6. [6. Usage](#6-usage)
+7. [7. Model Training](#7-model-training)
+8. [8. Dataset](#8-dataset)
+9. [9. Results](#9-results)
+10. [10. Colab Workflow & Outputs](#10-colab-workflow--outputs)
+11. [11. Vertex AI Production & Outputs](#11-vertex-ai-production--outputs)
+12. [12. Deployment](#12-deployment)
+13. [13. MLOps Pipeline (Extra Credit)](#13-mlops-pipeline-extra-credit)
+14. [14. Project Structure](#14-project-structure)
+15. [15. Technical Details](#15-technical-details)
+16. [16. Ethical Considerations](#16-ethical-considerations)
+17. [17. References](#17-references)
+18. [18. License](#18-license)
+19. [19. Acknowledgments](#19-acknowledgments)
 
 ---
 
-## Project Overview
+## 1. Project Overview
 
 This project builds an end-to-end AI system that analyzes mental-health-related text and extracts interpretable psychosocial signals. These signals are **strictly non-diagnostic** and are intended to support therapists by highlighting contextual cues in message-based telehealth environments.
 
-### Problem Statement
+### 1.1 Problem Statement
 
 Mental health professionals reviewing text-based patient communications need tools to quickly identify concerning patterns. Manual review is time-consuming and may miss subtle indicators. Our system provides automated psychometric feature extraction to assist (not replace) clinical judgment.
 
-### Solution
+### 1.2 Solution
 
 We developed a **multi-task transformer model** that extracts five psychometric dimensions from text:
 
@@ -50,7 +56,7 @@ We developed a **multi-task transformer model** that extracts five psychometric 
 
 ---
 
-## Key Features
+## 2. Key Features
 
 - **Multi-Task Learning**: Single model predicts 5 psychometric dimensions simultaneously
 - **XLM-RoBERTa Backbone**: Multilingual support with state-of-the-art NLP
@@ -62,7 +68,7 @@ We developed a **multi-task transformer model** that extracts five psychometric 
 
 ---
 
-## Architecture
+## 3. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -111,7 +117,21 @@ We developed a **multi-task transformer model** that extracts five psychometric 
 
 ---
 
-## Installation
+## 4. Methodology (CRISP-DM)
+
+We followed CRISP-DM to structure the project. Highlights:
+- Business & Data Understanding: Focus on non-diagnostic psychosocial signals; datasets from `phoenix1803/Mental-Health-LongParas` plus Reddit/counseling sources.
+- Data Understanding & EDA: Ran EDA on the actual `phoenix1803/Mental-Health-LongParas` dataset in the notebook (label distribution, target ranges, text length stats) to inform splits and loss scaling; see Section 8.4 and the Colab run (Section 10) for visuals.
+- Data Preparation: Stratified 70/15/15 splits, tokenization (max_length=256), support scaling, Reddit cleaning (remove deleted/short texts).
+- Modeling: Frozen XLM-RoBERTa backbone with five linear heads; MSE for regressions, BCEWithLogits with `pos_weight` for family history; heads-only optimization with LR decay.
+- Evaluation: R²/MAE per regression head; F1/AUC/confusion matrix for family history; visuals in `images/`.
+- Deployment: FastAPI/Gradio locally; Vertex AI custom job → registry → endpoint → Bloom app integration.
+
+Full details: [`docs/crisp_dm.md`](docs/crisp_dm.md).
+
+---
+
+## 5. Installation
 
 ### Prerequisites
 
@@ -144,7 +164,7 @@ For the easiest experience, use our Google Colab notebook:
 
 ---
 
-## Usage
+## 6. Usage
 
 ### Gradio Demo
 
@@ -195,9 +215,9 @@ print(result)
 
 ---
 
-## Model Training
+## 7. Model Training
 
-### Training from Scratch
+### 7.1 Training from Scratch
 
 ```bash
 cd src
@@ -215,14 +235,14 @@ python train.py \
   --output-dir ../trained_model
 ```
 
-### Training on Google Colab
+### 7.2 Training on Google Colab
 
 1. Open the notebook in Colab
 2. Connect to a T4 GPU runtime
 3. Run all cells sequentially
 4. Training takes ~45 minutes on T4 GPU
 
-### Training on Vertex AI
+### 7.3 Training on Vertex AI
 
 ```bash
 # Build Docker image
@@ -237,9 +257,9 @@ gcloud ai custom-jobs create \
 
 ---
 
-## Dataset
+## 8. Dataset
 
-### Primary Training Data
+### 8.1 Primary Training Data
 
 **[phoenix1803/Mental-Health-LongParas](https://huggingface.co/datasets/phoenix1803/Mental-Health-LongParas)**
 
@@ -255,7 +275,7 @@ gcloud ai custom-jobs create \
 | social_isolation_score | int | 0 to 4 |
 | support_system_strength | float | 0.0 to 0.04 |
 
-### Pseudo-Labeling Data
+### 8.2 Pseudo-Labeling Data
 
 **[Reddit Mental Health Classification](https://huggingface.co/datasets/kamruzzaman-asif/reddit-mental-health-classification)**
 
@@ -263,7 +283,7 @@ gcloud ai custom-jobs create \
 - Filtered to ~600K high-quality posts
 - Used for weak supervision and clustering
 
-### Data Cleaning
+### 8.3 Data Cleaning
 
 Applied filters:
 - Remove survey/YouTube links
@@ -271,11 +291,17 @@ Applied filters:
 - Remove texts > 12,000 characters
 - Filter spam/academic solicitations
 
+### 8.4 Exploratory Data Analysis (EDA)
+
+- Performed in `notebooks/Mental_Health_Psychometrics_Training.ipynb` on the actual `phoenix1803/Mental-Health-LongParas` dataset.
+- Summaries: label distribution (used for stratified splits), target ranges per psychometric column, and text length statistics to set `max_length=256`.
+- Outputs: quick plots/tables in the notebook; use these to decide on pos_weight for family history and to validate the split strategy before training (Sections 10 and 11 build on this).
+
 ---
 
-## Results
+## 9. Results
 
-### Model Performance (Validation Set)
+### 9.1 Model Performance (Validation Set)
 
 | Dimension | Metric | Score | Status |
 |-----------|--------|-------|--------|
@@ -288,14 +314,14 @@ Applied filters:
 | Family History | F1 | 0.71 | ✅ Keep |
 | Family History | AUC | 0.78 | ✅ Keep |
 
-### Clustering Results
+### 9.2 Clustering Results
 
 Using K-Means on psychometric features:
 - **K=2** (optimal by silhouette score)
 - Cluster 0: Family-oriented distress narratives
 - Cluster 1: Individual-focused distress narratives
 
-### Inference Latency
+### 9.3 Inference Latency
 
 | Environment | Latency |
 |-------------|---------|
@@ -304,30 +330,78 @@ Using K-Means on psychometric features:
 | Cloud Run | ~80-120ms |
 | Vertex AI Endpoint | ~100ms |
 
-### Evaluation Visualizations
+---
 
-> **Note:** These visualizations were generated from metrics extracted from the Vertex AI Custom Training Job logs (Job ID: `3111661388854984704`). The training ran for 5 epochs on an NVIDIA A100 GPU, with per-head losses logged at each epoch.
+## 10. Colab Workflow & Outputs
 
-#### Confusion Matrix - Family History Classification
-![Confusion Matrix](images/11-confusion-matrix.png)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/samipn/CMPE255_Final_Project/blob/main/notebooks/Mental_Health_Psychometrics_Training.ipynb)
 
-#### Model Performance by Prediction Head
-![Classification Report](images/12-classification-report.png)
-
-#### Clustering Analysis (K-Means)
-![Clustering Analysis](images/13-clustering-analysis.png)
-
-#### ROC Curve - Family History Binary Classification
-![ROC Curve](images/14-roc-curve.png)
-
-#### Comprehensive Metrics Summary
-![Metrics Summary](images/15-metrics-summary.png)
+- Notebook: `notebooks/Mental_Health_Psychometrics_Training.ipynb` (renamed from `Final_2.ipynb`) is the canonical, self-contained Colab run. It installs deps, loads `phoenix1803/Mental-Health-LongParas`, trains the heads-only XLM-RoBERTa model with LR decay/pos_weight, and logs per-head losses plus metrics JSON.
+- Visuals: The notebook generates training curves, per-head losses, confusion matrix/ROC for family history, clustering plots, and a metrics summary. When you run it in Colab, download these outputs from `/content/exported_model` (or Drive) and keep them separate from the Vertex visuals. If you want to check them into the repo, place them under `images/colab/`.
+- Important results to capture from your Colab run: per-head metrics JSON, learning curves, confusion matrix/ROC, clustering separation, and any short-run latency observations. Use these as the “notebook run” reference; the production-grade metrics live in Section 11.
+- How to run: Use a Colab GPU runtime (T4/A100), run all cells, and export artifacts to `/content/exported_model` (or Drive) for local FastAPI/Gradio use. The notebook includes quick single/batch inference examples matching the FastAPI response schema.
+- Gradio note: The interactive Gradio UI lives in `app/gradio_demo.py` (not embedded in the notebook). To demo in Colab, `pip install gradio` and run `python app/gradio_demo.py` after cloning; it will launch a shareable link with the simulated pipeline visuals and examples.
 
 ---
 
-## Deployment
+## 11. Vertex AI Production & Outputs
 
-### Docker
+- Pipeline: Build/push the training image (Dockerfile + `src/train.py`), submit a Vertex Custom Job, upload to Model Registry, then deploy to an endpoint with `/predict` and `/health` matching `src/inference.py`.
+- Outputs: Vertex training job metrics underpin the main validation/test results and the visuals in `images/09`–`15` (A100, 5-epoch run). Endpoint screenshots (training jobs, registry, endpoints, inference tests) are in `images/01`–`08`.
+- Integration: The deployed endpoint is consumed by the Bloom app (https://github.com/opsc-io/Bloom) and returns `label`, `confidence`, `risk_level`, and optional `psychometrics/all_scores` fields expected by the app.
+- Retraining note: Run a fresh Vertex training job before go-live to align weights with the latest data/config, then redeploy and update the Bloom endpoint URL if needed.
+- Ops notes: Monitor latency (~100ms p50) and health via `/health`; keep auth/region consistent with the Bloom deployment configuration.
+
+### 11.1 Evaluation Visualizations (Vertex AI Run)
+
+> Generated from the Vertex AI Custom Training Job (A100, 5 epochs), Job ID: `3111661388854984704`.
+
+#### 11.1.1 Confusion Matrix - Family History Classification
+![Confusion Matrix](images/11-confusion-matrix.png)
+
+#### 11.1.2 Model Performance by Prediction Head
+![Classification Report](images/12-classification-report.png)
+
+#### 11.1.3 Clustering Analysis (K-Means)
+![Clustering Analysis](images/13-clustering-analysis.png)
+
+#### 11.1.4 ROC Curve - Family History Binary Classification
+![ROC Curve](images/14-roc-curve.png)
+
+#### 11.1.5 Comprehensive Metrics Summary
+![Metrics Summary](images/15-metrics-summary.png)
+
+### 11.2 Vertex Deployment Screenshots
+
+#### 11.2.1 Vertex AI Custom Training Jobs
+![Training Jobs](images/01-training-jobs.png)
+
+#### 11.2.2 Training Job Details & Logs
+![Training Job Detail](images/02-training-job-detail.png)
+
+#### 11.2.3 Model Registry
+![Model Registry](images/03-model-registry.png)
+
+#### 11.2.4 Deployed Endpoints
+![Endpoints](images/04-endpoints.png)
+
+#### 11.2.5 Endpoint Configuration & Deployed Models
+![Endpoint Detail](images/05-endpoint-detail.png)
+
+#### 11.2.6 Artifact Registry (Docker Images)
+![Artifact Registry](images/06-artifact-registry.png)
+
+#### 11.2.7 Live Inference from Production Endpoint
+![Inference](images/07-inference.png)
+
+#### 11.2.8 Endpoint Testing in Google Cloud Console
+![Endpoint Testing](images/08-endpoint-testing.png)
+
+---
+
+## 12. Deployment
+
+### 12.1 Docker
 
 ```bash
 # Build image
@@ -337,7 +411,7 @@ docker build -t mental-health-psychometrics .
 docker run -p 8080:8080 mental-health-psychometrics
 ```
 
-### Google Cloud Run
+### 12.2 Google Cloud Run
 
 ```bash
 # Deploy directly from source
@@ -349,7 +423,7 @@ gcloud run deploy mental-health-api \
   --cpu 2
 ```
 
-### Vertex AI Endpoint
+### 12.3 Vertex AI Endpoint
 
 The model is deployed on Vertex AI for production use in the Bloom Health application.
 
@@ -367,13 +441,22 @@ gcloud ai endpoints deploy-model ENDPOINT_ID \
   --min-replica-count=1
 ```
 
+### 12.4 Live Production Endpoint
+
+The model is currently deployed and serving predictions for the **Bloom Health** telehealth application:
+
+- **Endpoint Region**: us-central1
+- **Machine Type**: n1-standard-4
+- **Replicas**: 1-5 (auto-scaled)
+- **Latency**: ~100ms p50
+
 ---
 
-## MLOps Pipeline (Extra Credit)
+## 13. MLOps Pipeline (Extra Credit)
 
 This project implements a complete MLOps pipeline on Google Cloud Vertex AI, demonstrating production-grade machine learning operations.
 
-### Pipeline Architecture
+### 13.1 Pipeline Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -392,7 +475,7 @@ This project implements a complete MLOps pipeline on Google Cloud Vertex AI, dem
   └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-### 1. Containerized Training
+### 13.2 Containerized Training
 
 ```bash
 # Build training image
@@ -402,7 +485,7 @@ docker build -t us-central1-docker.pkg.dev/PROJECT_ID/ml-images/mental-health-tr
 docker push us-central1-docker.pkg.dev/PROJECT_ID/ml-images/mental-health-training:latest
 ```
 
-### 2. Vertex AI Custom Training Job
+### 13.3 Vertex AI Custom Training Job
 
 ```bash
 gcloud ai custom-jobs create \
@@ -416,7 +499,7 @@ container-image-uri=us-central1-docker.pkg.dev/PROJECT_ID/ml-images/mental-healt
   --args="--epochs=5,--batch-size=32,--output-dir=gs://bloom-ml-models/trained_model"
 ```
 
-### 3. Model Registration
+### 13.4 Model Registration
 
 ```bash
 # Upload trained model to Vertex AI Model Registry
@@ -428,7 +511,7 @@ gcloud ai models upload \
   --container-health-route=/health
 ```
 
-### 4. Endpoint Deployment with Auto-scaling
+### 13.5 Endpoint Deployment with Auto-scaling
 
 ```bash
 # Create endpoint
@@ -447,7 +530,7 @@ gcloud ai endpoints deploy-model ENDPOINT_ID \
   --traffic-split=0=100
 ```
 
-### 5. Production Inference
+### 13.6 Production Inference
 
 ```python
 # Call deployed endpoint
@@ -475,7 +558,7 @@ print(response.predictions)
 # }]
 ```
 
-### MLOps Features Implemented
+### 13.7 MLOps Features Implemented
 
 | Feature | Implementation | Status |
 |---------|---------------|--------|
@@ -488,50 +571,7 @@ print(response.predictions)
 | **Monitoring** | Cloud Logging + Metrics | ✅ |
 | **CI/CD Integration** | GitHub Actions workflows | ✅ |
 
-### Screenshots
-
-#### Vertex AI Custom Training Jobs
-![Training Jobs](images/01-training-jobs.png)
-
-#### Training Job Details & Logs
-![Training Job Detail](images/02-training-job-detail.png)
-
-#### Model Registry
-![Model Registry](images/03-model-registry.png)
-
-#### Deployed Endpoints
-![Endpoints](images/04-endpoints.png)
-
-#### Endpoint Configuration & Deployed Models
-![Endpoint Detail](images/05-endpoint-detail.png)
-
-#### Artifact Registry (Docker Images)
-![Artifact Registry](images/06-artifact-registry.png)
-
-#### Live Inference from Production Endpoint
-![Inference](images/07-inference.png)
-
-#### Endpoint Testing in Google Cloud Console
-![Endpoint Testing](images/08-endpoint-testing.png)
-
-#### Training Metrics Dashboard
-![Training Metrics](images/09-training-metrics.png)
-
-#### Learning Curves
-![Learning Curves](images/10-learning-curves.png)
-
-### Live Production Endpoint
-
-The model is currently deployed and serving predictions for the **Bloom Health** telehealth application:
-
-- **Endpoint Region**: us-central1
-- **Machine Type**: n1-standard-4
-- **Replicas**: 1-5 (auto-scaled)
-- **Latency**: ~100ms p50
-
----
-
-## Project Structure
+## 14. Project Structure
 
 ```
 CMPE255_Final_Project/
@@ -561,7 +601,7 @@ CMPE255_Final_Project/
 
 ---
 
-## Technical Details
+## 15. Technical Details
 
 ### Model Configuration
 
@@ -612,7 +652,7 @@ def determine_label(psychometrics):
 
 ---
 
-## Ethical Considerations
+## 16. Ethical Considerations
 
 **Important Disclaimers:**
 
@@ -630,7 +670,7 @@ def determine_label(psychometrics):
 
 ---
 
-## References
+## 17. References
 
 1. Conneau, A., et al. (2020). "Unsupervised Cross-lingual Representation Learning at Scale." ACL.
 2. Ratner, A., et al. (2017). "Snorkel: Rapid Training Data Creation with Weak Supervision." VLDB.
@@ -638,13 +678,13 @@ def determine_label(psychometrics):
 
 ---
 
-## License
+## 18. License
 
 This project is for educational purposes as part of CMPE 255 at San Jose State University.
 
 ---
 
-## Acknowledgments
+## 19. Acknowledgments
 
 - San Jose State University, Department of Computer Engineering
 - HuggingFace for the Transformers library and datasets
