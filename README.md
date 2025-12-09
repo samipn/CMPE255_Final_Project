@@ -40,6 +40,14 @@ Here is a link to the slides: [Slideshow](https://github.com/samipn/CMPE255_Fina
 
 ---
 
+## Video Presentation
+
+[![Video Presentation](https://img.youtube.com/vi/6vz6U4lNKus/0.jpg)](https://youtu.be/6vz6U4lNKus)
+
+Click the thumbnail above to watch the video presentation on YouTube.
+
+---
+
 ## 1. Project Overview
 
 This project builds an end-to-end AI system that analyzes mental-health-related text and extracts interpretable psychosocial signals. These signals are **strictly non-diagnostic** and are intended to support therapists by highlighting contextual cues in message-based telehealth environments.
